@@ -11,6 +11,9 @@ class Settings:
     ## CORS
     ALLOWED_ORIGINS: list[str] = config("ALLOWED_ORIGINS", default="", cast=Csv())
     
+    ## DATABASE CONFIGURATIONS
+    DATABASE_URL: str = config("DATABASE_URL")  
+    
     @property
     def is_production(self) -> bool:
         return self.APP_ENV == "production"
