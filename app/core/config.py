@@ -1,4 +1,5 @@
 from decouple import Csv, config
+from pathlib import Path
 
 class Settings:
     APP_NAME: str = config("APP_NAME", default="Distributed Job Processing Platform")
@@ -19,9 +20,21 @@ class Settings:
     JWT_ALGORITHM: str = config("JWT_ALGORITHM", default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int)
     
+    ## File Storage
+    UPLOAD_DIR: str = config("UPLOAD_DIR", default="uploads")
+    MAX_UPLOAD_SIZE_MB: int = config("MAX_UPLOAD_SIZE_MB", default=20, cast=int)
+    
     
     @property
     def is_production(self) -> bool:
         return self.APP_ENV == "production"
+    
+    @property
+    def upload_path(self) -> Path:
+        return Path(self.UPLOAD_DIR).resolve()
+    
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
     
 settings = Settings()
