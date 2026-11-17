@@ -20,6 +20,11 @@ class Settings:
     JWT_ALGORITHM: str = config("JWT_ALGORITHM", default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int)
     
+    # Redis / Celery
+    REDIS_URL: str = config("REDIS_URL")
+    CELERY_BROKER_URL: str = config("CELERY_BROKER_URL")
+    CELERY_RESULT_BACKEND: str = config("CELERY_RESULT_BACKEND")
+    
     ## File Storage
     UPLOAD_DIR: str = config("UPLOAD_DIR", default="uploads")
     MAX_UPLOAD_SIZE_MB: int = config("MAX_UPLOAD_SIZE_MB", default=20, cast=int)

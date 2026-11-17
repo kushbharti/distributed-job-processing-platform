@@ -1,15 +1,15 @@
 from typing import Annotated
-
+from redis.exceptions import RedisError
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, TokenPayload
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.db.dependencies import DbSession
 from app.schemas.auth import Token
 from app.schemas.user import UserCreate, UserRead
-from app.services import auth_service
+from app.services import auth_service, token_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -40,6 +40,16 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: DbSession):
         access_token=create_access_token(user.id),
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(payload: TokenPayload):
+    try:
+        token_service.revoke_token(payload["jti"], payload["exp"])
+    except RedisError:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "Could not complete logout, please retry",
+        ) from None
 
 
 @router.get("/me", response_model=UserRead)

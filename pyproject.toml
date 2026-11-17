@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.20.1",
+    "celery[redis]>=5.7.0",
     "fastapi>=0.163.1",
     "psycopg[binary]>=3.3.9",
     "pwdlib[argon2]>=0.4.2",
@@ -14,6 +15,7 @@ dependencies = [
     "pymupdf>=2.1",
     "python-decouple>=3.8",
     "python-multipart>=0.0.34",
+    "redis>=8.1.0",
     "sqlalchemy>=2.0,<3.0",
     "uvicorn[standard]>=0.54.0",
 ]
