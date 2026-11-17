@@ -6,7 +6,7 @@ celery_app = Celery(
     "job_platform",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["app.tasks.debug_tasks"],
+    include=["app.tasks.debug_tasks", "app.tasks.document_tasks"],
 )
 
 celery_app.conf.update(

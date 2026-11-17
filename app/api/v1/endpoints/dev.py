@@ -1,9 +1,14 @@
+import uuid
+
 from celery.result import AsyncResult
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.deps import CurrentUser
+from app.db.dependencies import DbSession
+from app.services import document_service
 from app.tasks.celery_app import celery_app
 from app.tasks.debug_tasks import slow_add
+from app.tasks.document_tasks import process_document
 
 router = APIRouter(prefix="/dev", tags=["dev (temporary)"])
 
@@ -26,3 +31,15 @@ def get_task_state(task_id: str, user: CurrentUser) -> dict:
     if isinstance(info, Exception):
         info = str(info)
     return {"task_id": task_id, "state": result.state, "info": info}
+
+
+@router.post("/documents/{document_id}/process", status_code=status.HTTP_202_ACCEPTED)
+def submit_document_processing(
+    document_id: uuid.UUID, user: CurrentUser, db: DbSession
+) -> dict:
+
+    document = document_service.get_document(db, user.id, document_id)
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    result = process_document.delay(str(document.id))
+    return {"task_id": result.id}
