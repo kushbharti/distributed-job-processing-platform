@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.document import Document
 
+from app.models.job import ACTIVE_STATUSES, Job
+from app.models.job_result import JobResult
+
 PDF_SIGNATURE = b"%PDF-"
 ALLOWED_CONTENT_TYPES = {"application/pdf", "application/x-pdf"}
 CHUNK_SIZE = 1024 * 1024  # 1 MB
@@ -19,6 +22,10 @@ class InvalidDocumentError(Exception):
 
 
 class FileTooLargeError(InvalidDocumentError):
+    pass
+
+
+class DocumentInUseError(Exception):
     pass
 
 
@@ -123,10 +130,27 @@ def get_document(
 
 
 def delete_document(db: Session, document: Document) -> None:
-    absolute_path = (settings.upload_path / document.file_path).resolve()
+    active = db.scalar(
+        select(func.count())
+        .select_from(Job)
+        .where(Job.document_id == document.id, Job.status.in_(ACTIVE_STATUSES))
+    )
+    if active:
+        raise DocumentInUseError("Document has a job in progress. Cancel it first.")
 
-    db.delete(document)
+    # Collect result files BEFORE the rows disappear.
+    result_files = db.execute(
+        select(JobResult.extracted_text_path, JobResult.report_path)
+        .join(Job, Job.id == JobResult.job_id)
+        .where(Job.document_id == document.id)
+    ).all()
+    relative_paths = [document.file_path, *[p for row in result_files for p in row]]
+
+    db.delete(document)  # the database cascades to jobs and job_results
     db.commit()
 
-    if absolute_path.is_relative_to(settings.upload_path):
-        absolute_path.unlink(missing_ok=True)
+    # Files go last: an orphan file is better than a row pointing at nothing.
+    for relative in relative_paths:
+        absolute = (settings.upload_path / relative).resolve()
+        if absolute.is_relative_to(settings.upload_path):
+            absolute.unlink(missing_ok=True)

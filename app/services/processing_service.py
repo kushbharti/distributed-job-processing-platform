@@ -85,3 +85,11 @@ def run_pipeline(
         "extracted_text_path": text_rel.as_posix(),
         "report_path": report_rel.as_posix(),
     }
+    
+def remove_outputs(output_key: str) -> None:
+    """Delete the files a job produced (used after cancellation)."""
+    for relative in (
+        Path("extracted") / f"{output_key}.txt",
+        Path("reports") / f"{output_key}.pdf",
+    ):
+        (settings.upload_path / relative).unlink(missing_ok=True)

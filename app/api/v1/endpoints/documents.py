@@ -46,4 +46,7 @@ def delete_document(document_id: uuid.UUID, user: CurrentUser, db: DbSession):
     document = document_service.get_document(db, user.id, document_id)
     if document is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
-    document_service.delete_document(db, document)
+    try:
+        document_service.delete_document(db, document)
+    except document_service.DocumentInUseError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc))
