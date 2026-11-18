@@ -1,7 +1,6 @@
 from app.core.config import settings
-from app.db.session import SessionLocal
-from app.services.recovery_service import recover_stale_jobs
 from app.services import outbox_service
+from app.services.recovery_service import recover_stale_jobs
 from app.tasks import document_tasks
 from app.tasks.document_tasks import process_document
 

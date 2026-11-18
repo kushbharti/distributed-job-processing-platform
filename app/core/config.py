@@ -1,5 +1,7 @@
-from decouple import Csv, config
 from pathlib import Path
+
+from decouple import Csv, config
+
 
 class Settings:
     APP_NAME: str = config("APP_NAME", default="Distributed Job Processing Platform")

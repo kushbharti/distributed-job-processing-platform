@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import delete, func, select
 
@@ -18,7 +18,7 @@ def recover_stale_jobs() -> list[tuple[uuid.UUID, str, str | None]]:
     A job is stale when it is PROCESSING but has not reported progress for longer than
     any task could legitimately run. Returns (job_id, new_status, error) for each change.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cutoff = now - timedelta(minutes=settings.STALE_JOB_MINUTES)
     changes: list[tuple[uuid.UUID, str, str | None]] = []
 

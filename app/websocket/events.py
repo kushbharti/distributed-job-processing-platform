@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from redis.exceptions import RedisError
 
@@ -30,7 +30,7 @@ def build_event(
         "current_stage": stage,
         "message": error or stage or "",
         "error_message": error,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

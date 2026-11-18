@@ -77,7 +77,7 @@ def _load_snapshot(job_id: uuid.UUID) -> dict | None:
 async def _receive_token(websocket: WebSocket) -> str | None:
     try:
         message = await asyncio.wait_for(websocket.receive_json(), timeout=AUTH_TIMEOUT_SECONDS)
-    except (asyncio.TimeoutError, ValueError, KeyError, TypeError):
+    except (TimeoutError, ValueError, KeyError, TypeError):
         return None
     if (
         isinstance(message, dict)

@@ -1,5 +1,5 @@
-import uuid
 import logging
+import uuid
 from pathlib import Path
 
 import pymupdf
@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.document import Document
-
 from app.models.job import ACTIVE_STATUSES, Job
 from app.models.job_result import JobResult
 

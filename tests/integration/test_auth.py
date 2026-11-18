@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 
 from app.core.config import settings
-from conftest import register_and_login
 
 API = "/api/v1/auth"
 
@@ -67,7 +66,7 @@ def test_garbage_token_is_rejected(client):
 def test_expired_token_is_rejected(client, auth_headers):
     user_id = client.get(f"{API}/me", headers=auth_headers).json()["id"]
     expired = jwt.encode(
-        {"sub": user_id, "jti": "old", "exp": datetime.now(timezone.utc) - timedelta(minutes=1)},
+        {"sub": user_id, "jti": "old", "exp": datetime.now(UTC) - timedelta(minutes=1)},
         settings.SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
     )

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
 
@@ -51,7 +51,7 @@ def build_report(
         title=f"Report: {filename}",
         author="Distributed Job Processing Platform",
     )
-    generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    generated = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
     story = [
         Paragraph("Document Processing Report", _styles["Title"]),

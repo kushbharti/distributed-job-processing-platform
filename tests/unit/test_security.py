@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 import pytest
@@ -48,7 +48,7 @@ def test_tampered_token_is_rejected():
 
 def test_expired_token_is_rejected():
     token = jwt.encode(
-        {"sub": "x", "jti": "j", "exp": datetime.now(timezone.utc) - timedelta(minutes=1)},
+        {"sub": "x", "jti": "j", "exp": datetime.now(UTC) - timedelta(minutes=1)},
         settings.SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -64,7 +64,7 @@ def test_token_missing_required_claims_is_rejected():
 
 def test_token_signed_with_another_key_is_rejected():
     forged = jwt.encode(
-        {"sub": "x", "jti": "j", "exp": datetime.now(timezone.utc) + timedelta(minutes=5)},
+        {"sub": "x", "jti": "j", "exp": datetime.now(UTC) + timedelta(minutes=5)},
         "some-other-secret-key-that-is-also-long-enough",
         algorithm=settings.JWT_ALGORITHM,
     )

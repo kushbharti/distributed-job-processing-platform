@@ -63,8 +63,9 @@ def _ensure_database() -> None:
 @pytest.fixture(scope="session", autouse=True)
 def _database():
     """Create the test database if needed and build the schema with the real migrations."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     _ensure_database()
     cfg = Config(str(ROOT / "alembic.ini"))
