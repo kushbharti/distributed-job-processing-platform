@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.job import ACTIVE_STATUSES, Job, JobStatus
 from app.models.job_result import JobResult
-from app.services import document_service, job_state
-from app.tasks.document_tasks import process_document
+from app.services import document_service, outbox_service
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +20,24 @@ class ActiveJobExistsError(Exception):
     pass
 
 
-class QueueUnavailableError(Exception):
+class JobNotCancellableError(Exception):
     pass
 
 
-class JobNotCancellableError(Exception):
+class JobNotRetryableError(Exception):
     pass
 
 
 class JobNotFinishedError(Exception):
     pass
+
+
+def _dispatch_best_effort(job_id: uuid.UUID) -> None:
+    """Try to publish right away. If that fails, the outbox poller delivers it later."""
+    try:
+        outbox_service.dispatch_pending(job_id=job_id)
+    except Exception:
+        logger.exception("Immediate dispatch failed for job %s; the poller will retry", job_id)
 
 
 def create_job(db: Session, user_id: uuid.UUID, document_id: uuid.UUID) -> Job:
@@ -39,34 +46,52 @@ def create_job(db: Session, user_id: uuid.UUID, document_id: uuid.UUID) -> Job:
         raise DocumentNotFoundError
 
     job_id = uuid.uuid4()
-    job = Job(
-        id=job_id,
-        user_id=user_id,
-        document_id=document_id,
-        celery_task_id=str(job_id),
-    )
-    db.add(job)
+    job = Job(id=job_id, user_id=user_id, document_id=document_id, celery_task_id=str(job_id))
     try:
-        db.commit()  # 1) the job exists in PostgreSQL (status PENDING)
+        db.add(job)
+        db.flush()  # the job row must exist before the outbox row that references it
+        outbox_service.enqueue_event(db, job_id)
+        db.commit()  # job + outbox intent saved atomically
     except IntegrityError:
         db.rollback()
         raise ActiveJobExistsError from None
 
-    try:
-        # 2) publish to Redis, using the job ID as the Celery task ID
-        process_document.apply_async(args=[str(job_id)], task_id=str(job_id))
-    except Exception:
-        logger.exception("Could not publish job %s to the broker", job_id)
-        job_state.fail_job(job_id, "Could not queue the job; please try again")
-        raise QueueUnavailableError from None
+    _dispatch_best_effort(job_id)
+    db.refresh(job)
+    return job
 
-    # 3) PENDING -> QUEUED, but only if a fast worker hasn't already claimed it
-    db.execute(
-        update(Job)
-        .where(Job.id == job_id, Job.status == JobStatus.PENDING.value)
-        .values(status=JobStatus.QUEUED.value, current_stage="Queued")
-    )
-    db.commit()
+
+def retry_job(db: Session, job: Job) -> Job:
+    """Manual reprocessing: FAILED or CANCELLED -> PENDING, then dispatched via the outbox."""
+    try:
+        result = db.execute(
+            update(Job)
+            .where(
+                Job.id == job.id,
+                Job.status.in_([JobStatus.FAILED.value, JobStatus.CANCELLED.value]),
+            )
+            .values(
+                status=JobStatus.PENDING.value,
+                progress=0,
+                current_stage="Waiting to be queued",
+                error_message=None,
+                retry_count=0,
+                started_at=None,
+                completed_at=None,
+                heartbeat_at=None,
+            )
+        )
+        if result.rowcount == 0:
+            db.rollback()
+            raise JobNotRetryableError
+        outbox_service.enqueue_event(db, job.id)
+        db.commit()
+    except IntegrityError:
+        # Another job for this document is active (partial unique index).
+        db.rollback()
+        raise ActiveJobExistsError from None
+
+    _dispatch_best_effort(job.id)
     db.refresh(job)
     return job
 
@@ -90,9 +115,7 @@ def list_jobs(
     if document_id is not None:
         base = base.where(Job.document_id == document_id)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    items = db.scalars(
-        base.order_by(Job.created_at.desc()).limit(limit).offset(offset)
-    ).all()
+    items = db.scalars(base.order_by(Job.created_at.desc()).limit(limit).offset(offset)).all()
     return list(items), total
 
 

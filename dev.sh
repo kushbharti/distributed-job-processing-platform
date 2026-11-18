@@ -5,7 +5,7 @@
 #   3. A terminal window for FastAPI
 #   4. A terminal window for the Celery worker
 #
-# Run from Git Bash (Windows), Linux or macOS:   bash dev.sh
+# Run from Git Bash (Windows), Linux or macOS: bash dev.sh
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -18,6 +18,9 @@ case "$OS" in
   MINGW*|MSYS*|CYGWIN*) WORKER_CMD="uv run celery -A app.tasks.celery_app:celery_app worker --loglevel=info --pool=solo" ;;
   *)                    WORKER_CMD="uv run celery -A app.tasks.celery_app:celery_app worker --loglevel=info" ;;
 esac
+# Celery Beat scheduler
+BEAT_CMD="uv run celery -A app.tasks.celery_app:celery_app beat --loglevel=info"
+
 
 echo "==> Starting Docker services (PostgreSQL, Redis)..."
 docker compose up -d
@@ -54,6 +57,9 @@ case "$OS" in
     WIN_DIR="$(cygpath -w "$PROJECT_DIR")"
     powershell.exe -NoProfile -Command "Start-Process powershell.exe -WorkingDirectory '$WIN_DIR' -ArgumentList '-NoExit','-Command','$API_CMD'"
     powershell.exe -NoProfile -Command "Start-Process powershell.exe -WorkingDirectory '$WIN_DIR' -ArgumentList '-NoExit','-Command','$WORKER_CMD'"
+
+    # Celery Beat scheduler
+    powershell.exe -NoProfile -Command "Start-Process powershell.exe -WorkingDirectory '$WIN_DIR' -ArgumentList '-NoExit','-Command','$BEAT_CMD'"
     ;;
   Darwin)
     # macOS Terminal.app
@@ -83,4 +89,4 @@ esac
 echo
 echo "Done."
 echo "  API docs : http://127.0.0.1:8000/docs"
-echo "  Stop     : close the two terminal windows (Ctrl+C in each), then 'docker compose stop'"
+echo "  Stop     : close the terminal windows (Ctrl+C in each), then 'docker compose stop'"

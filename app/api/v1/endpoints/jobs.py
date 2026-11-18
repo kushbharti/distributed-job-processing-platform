@@ -30,11 +30,6 @@ def create_job(payload: JobCreate, user: CurrentUser, db: DbSession):
         raise HTTPException(
             status.HTTP_409_CONFLICT, "This document already has a job in progress"
         )
-    except job_service.QueueUnavailableError:
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Job queue unavailable, please try again",
-        )
 
 
 @router.get("", response_model=JobList)
@@ -70,6 +65,20 @@ def cancel_job(job_id: uuid.UUID, user: CurrentUser, db: DbSession):
     except job_service.JobNotCancellableError:
         raise HTTPException(
             status.HTTP_409_CONFLICT, "Job has already finished and cannot be cancelled"
+        )
+
+@router.post("/{job_id}/retry", response_model=JobRead, status_code=status.HTTP_202_ACCEPTED)
+def retry_job(job_id: uuid.UUID, user: CurrentUser, db: DbSession):
+    job = _job_or_404(db, user, job_id)
+    try:
+        return job_service.retry_job(db, job)
+    except job_service.JobNotRetryableError:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "Only FAILED or CANCELLED jobs can be retried"
+        )
+    except job_service.ActiveJobExistsError:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "This document already has a job in progress"
         )
 
 
