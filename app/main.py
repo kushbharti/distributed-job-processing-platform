@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from fastapi.staticfiles import StaticFiles
+
 from fastapi import FastAPI
 from app.core.config import settings
 from app.api.v1.router import api_router
@@ -22,6 +26,7 @@ def create_app() -> FastAPI:
     )
     
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+    app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     
     @app.get("/", include_in_schema=False)
     async def root() -> dict:

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.models.job import ACTIVE_STATUSES, Job, JobStatus
 from app.models.job_result import JobResult
 from app.services import document_service, outbox_service
+from app.websocket.events import publish_job_event
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +134,7 @@ def cancel_job(db: Session, job: Job) -> Job:
     if result.rowcount == 0:
         raise JobNotCancellableError
     db.refresh(job)
+    publish_job_event(job.id, job.status, job.progress, job.current_stage)
     return job
 
 

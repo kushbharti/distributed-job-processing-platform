@@ -1,4 +1,5 @@
 import uuid
+import logging
 from pathlib import Path
 
 import pymupdf
@@ -11,6 +12,8 @@ from app.models.document import Document
 
 from app.models.job import ACTIVE_STATUSES, Job
 from app.models.job_result import JobResult
+
+logger = logging.getLogger(__name__)
 
 PDF_SIGNATURE = b"%PDF-"
 ALLOWED_CONTENT_TYPES = {"application/pdf", "application/x-pdf"}
@@ -57,7 +60,8 @@ def _write_stream(upload: UploadFile, destination: Path) -> int:
 def _inspect_pdf(path: Path) -> int:
     """Open the file with PyMuPDF to prove it is a readable PDF. Returns page count."""
     try:
-        with pymupdf.open(path) as pdf:
+        data = path.read_bytes()
+        with pymupdf.open(stream=data, filetype="pdf") as pdf:
             if pdf.needs_pass:
                 raise InvalidDocumentError("Password-protected PDFs are not supported")
             if pdf.page_count == 0:
@@ -67,6 +71,13 @@ def _inspect_pdf(path: Path) -> int:
         raise
     except Exception:
         raise InvalidDocumentError("PDF is corrupted or unreadable") from None
+
+def _remove_quietly(path: Path) -> None:
+    """Best-effort cleanup: a failure here must never hide the original error."""
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        logger.warning("Could not remove %s", path, exc_info=True)
 
 
 def save_upload(db: Session, user_id: uuid.UUID, upload: UploadFile) -> Document:
@@ -100,7 +111,7 @@ def save_upload(db: Session, user_id: uuid.UUID, upload: UploadFile) -> Document
     except Exception:
      
         db.rollback()
-        absolute_path.unlink(missing_ok=True)
+        _remove_quietly(absolute_path)
         raise
 
     db.refresh(document)

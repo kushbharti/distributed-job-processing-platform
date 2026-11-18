@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live job progress (test page)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    fieldset { margin-bottom: 1rem; }
+    label { display: block; margin: .4rem 0; }
+    input[type=text], input[type=email], input[type=password] { width: 100%; box-sizing: border-box; }
+    progress { width: 100%; height: 1.5rem; }
+    #log { background: #111; color: #ddd; padding: .75rem; height: 12rem; overflow: auto;
+           font: 12px/1.4 monospace; white-space: pre-wrap; }
+    .row { display: flex; gap: 1rem; justify-content: space-between; }
+    #error { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Live job progress</h1>
+
+  <form id="login">
+    <fieldset>
+      <legend>1. Log in</legend>
+      <label>Email <input id="email" type="email" required></label>
+      <label>Password <input id="password" type="password" required></label>
+      <button type="submit">Log in</button>
+    </fieldset>
+  </form>
+
+  <form id="upload">
+    <fieldset>
+      <legend>2. Upload a PDF and start a job</legend>
+      <input id="file" type="file" accept="application/pdf" required>
+      <button type="submit">Upload and process</button>
+    </fieldset>
+  </form>
+
+  <fieldset>
+    <legend>Or watch an existing job</legend>
+    <input id="jobId" type="text" placeholder="job id">
+    <button id="watch" type="button">Watch</button>
+  </fieldset>
+
+  <h2>Status</h2>
+  <progress id="bar" max="100" value="0"></progress>
+  <div class="row"><span id="status">-</span><span id="stage"></span><span id="conn">not connected</span></div>
+  <p id="error"></p>
+
+  <h2>Log</h2>
+  <div id="log"></div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
+  const NO_RETRY = [1008, 4401, 4404];
+  let token = null;      // kept in memory only
+  let socket = null, jobId = null, attempt = 0, finished = false, retryTimer = null;
+
+  function log(text) {
+    const box = $("log");
+    box.textContent += new Date().toLocaleTimeString() + "  " + text + "\n";
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function api(path, options = {}) {
+    const headers = Object.assign({}, options.headers || {});
+    if (token) headers["Authorization"] = "Bearer " + token;
+    const res = await fetch("/api/v1" + path, Object.assign({}, options, { headers }));
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { detail = (await res.json()).detail; } catch (e) {}
+      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    }
+    return res.status === 204 ? null : res.json();
+  }
+
+  function render(data) {
+    $("bar").value = data.progress;
+    $("status").textContent = data.status + " (" + data.progress + "%)";
+    $("stage").textContent = data.current_stage || "";
+    $("error").textContent = data.error_message || "";
+  }
+
+  function connect() {
+    const scheme = location.protocol === "https:" ? "wss" : "ws";
+    socket = new WebSocket(scheme + "://" + location.host + "/api/v1/ws/jobs/" + jobId);
+    $("conn").textContent = "connecting...";
+    socket.onopen = () => {
+      attempt = 0;
+      $("conn").textContent = "connected";
+      socket.send(JSON.stringify({ type: "auth", token: token }));  // token goes in a message, not the URL
+    };
+    socket.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      render(msg.data);
+      log(msg.type + ": " + msg.data.status + " " + msg.data.progress + "% " + (msg.data.message || ""));
+      if (TERMINAL.includes(msg.data.status)) finished = true;
+    };
+    socket.onclose = (event) => {
+      $("conn").textContent = "closed (" + event.code + ")";
+      if (finished) return;
+      if (NO_RETRY.includes(event.code)) { log("Not reconnecting: " + (event.reason || event.code)); return; }
+      const delay = Math.min(1000 * 2 ** attempt, 15000) + Math.random() * 500;
+      attempt += 1;
+      log("Disconnected. Reconnecting in " + Math.round(delay / 1000) + "s");
+      retryTimer = setTimeout(connect, delay);  // the server's snapshot re-syncs us
+    };
+  }
+
+  function start(id) {
+    clearTimeout(retryTimer);
+    if (socket) { socket.onclose = null; socket.close(); }
+    jobId = id; finished = false; attempt = 0;
+    connect();
+  }
+
+  $("login").onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const data = await api("/auth/login", {
+        method: "POST",
+        body: new URLSearchParams({ username: $("email").value, password: $("password").value }),
+      });
+      token = data.access_token;
+      log("Logged in");
+    } catch (err) { log("Login failed: " + err.message); }
+  };
+
+  $("upload").onsubmit = async (e) => {
+    e.preventDefault();
+    if (!token) return log("Log in first");
+    try {
+      const form = new FormData();
+      form.append("file", $("file").files[0]);
+      const doc = await api("/documents/upload", { method: "POST", body: form });
+      log("Uploaded " + doc.filename);
+      const job = await api("/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document_id: doc.id }),
+      });
+      log("Job created: " + job.id);
+      $("jobId").value = job.id;
+      start(job.id);
+    } catch (err) { log("Error: " + err.message); }
+  };
+
+  $("watch").onclick = () => {
+    if (!token) return log("Log in first");
+    const id = $("jobId").value.trim();
+    if (id) start(id);
+  };
+</script>
+</body>
+</html>

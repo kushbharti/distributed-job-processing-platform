@@ -32,7 +32,7 @@ def extract_pdf(path: Path) -> ExtractedPDF:
     if not path.is_file():
         raise PDFProcessingError("Source file is missing")
     try:
-        with pymupdf.open(path) as pdf:
+        with pymupdf.open(stream=path.read_bytes(), filetype="pdf") as pdf:
             if pdf.needs_pass:
                 raise PDFProcessingError("Password-protected PDFs are not supported")
             if pdf.page_count == 0:

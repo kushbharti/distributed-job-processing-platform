@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.job import Job, JobStatus
 from app.models.job_result import JobResult
+from app.websocket.events import publish_job_event  # NEW
 
 PROCESSING = JobStatus.PROCESSING.value
 CLAIMABLE = (
@@ -17,11 +18,6 @@ NOT_FINISHED = (*CLAIMABLE, PROCESSING)
 
 
 def claim_job(db: Session, job_id: uuid.UUID) -> int | None:
-    """Atomically move a claimable job to PROCESSING.
-
-    Returns the job's retry_count for the one worker that wins, or None for everyone else
-    (job cancelled, already finished, or being processed by another worker).
-    """
     row = db.execute(
         update(Job)
         .where(Job.id == job_id, Job.status.in_(CLAIMABLE))
@@ -36,11 +32,13 @@ def claim_job(db: Session, job_id: uuid.UUID) -> int | None:
         .execution_options(synchronize_session=False)
     ).first()
     db.commit()
-    return None if row is None else row[0]
+    if row is None:
+        return None
+    publish_job_event(job_id, PROCESSING, 0, "Starting")  # NEW
+    return row[0]
 
 
 def update_progress(job_id: uuid.UUID, stage: str, progress: int) -> bool:
-    """Record progress and a heartbeat. False means the job is no longer PROCESSING."""
     with SessionLocal() as db:
         result = db.execute(
             update(Job)
@@ -48,7 +46,10 @@ def update_progress(job_id: uuid.UUID, stage: str, progress: int) -> bool:
             .values(current_stage=stage, progress=progress, heartbeat_at=func.now())
         )
         db.commit()
-        return result.rowcount == 1
+        updated = result.rowcount == 1
+    if updated:
+        publish_job_event(job_id, PROCESSING, progress, stage)  # NEW
+    return updated
 
 
 def mark_retrying(job_id: uuid.UUID, message: str) -> bool:
@@ -64,11 +65,13 @@ def mark_retrying(job_id: uuid.UUID, message: str) -> bool:
             )
         )
         db.commit()
-        return result.rowcount == 1
+        updated = result.rowcount == 1
+    if updated:
+        publish_job_event(job_id, JobStatus.RETRYING.value, 0, "Waiting to retry", message)  # NEW
+    return updated
 
 
 def complete_job(job_id: uuid.UUID, output: dict) -> bool:
-    """Mark COMPLETED and store the result in ONE transaction."""
     with SessionLocal() as db:
         updated = db.execute(
             update(Job)
@@ -96,12 +99,13 @@ def complete_job(job_id: uuid.UUID, output: dict) -> bool:
             )
         )
         db.commit()
-        return True
+    publish_job_event(job_id, JobStatus.COMPLETED.value, 100, "Completed")  
+    return True
 
 
 def fail_job(job_id: uuid.UUID, message: str) -> None:
     with SessionLocal() as db:
-        db.execute(
+        result = db.execute(
             update(Job)
             .where(Job.id == job_id, Job.status.in_(NOT_FINISHED))
             .values(
@@ -112,3 +116,6 @@ def fail_job(job_id: uuid.UUID, message: str) -> None:
             )
         )
         db.commit()
+        failed = result.rowcount == 1
+    if failed:
+        publish_job_event(job_id, JobStatus.FAILED.value, 0, "Failed", message[:1000])  # NEW

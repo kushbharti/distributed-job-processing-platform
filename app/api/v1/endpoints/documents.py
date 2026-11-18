@@ -17,7 +17,7 @@ def upload_document(file: UploadFile, user: CurrentUser, db: DbSession):
     try:
         return document_service.save_upload(db, user.id, file)
     except document_service.FileTooLargeError as exc:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, str(exc))
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, str(exc))
     except document_service.InvalidDocumentError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
 
