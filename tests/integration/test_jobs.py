@@ -113,3 +113,31 @@ def test_document_with_an_active_job_cannot_be_deleted(client, auth_headers, doc
 
 def test_unknown_job_is_404(client, auth_headers):
     assert client.get(f"{API}/{uuid.uuid4()}", headers=auth_headers).status_code == 404
+    
+
+def test_stats_count_only_the_owners_jobs(client, auth_headers, other_headers, queued_job):
+    body = client.get(f"{API}/stats", headers=auth_headers).json()
+    assert body["total"] == 1
+    assert body["by_status"]["QUEUED"] == 1
+    assert body["by_status"]["COMPLETED"] == 0
+    assert set(body["by_status"]) == {
+        "PENDING", "QUEUED", "PROCESSING", "RETRYING", "COMPLETED", "FAILED", "CANCELLED",
+    }
+    assert client.get(f"{API}/stats", headers=other_headers).json()["total"] == 0
+
+
+def test_stats_route_is_not_mistaken_for_a_job_id(client, auth_headers):
+    assert client.get(f"{API}/stats", headers=auth_headers).status_code == 200
+
+
+def test_list_filters_by_several_statuses(client, auth_headers, queued_job):
+    both = client.get(API, headers=auth_headers, params=[("status", "QUEUED"), ("status", "PROCESSING")])
+    assert both.json()["total"] == 1
+    none = client.get(API, headers=auth_headers, params=[("status", "FAILED"), ("status", "CANCELLED")])
+    assert none.json()["total"] == 0
+
+
+def test_jobs_include_the_document_filename(client, auth_headers, queued_job):
+    assert queued_job["document_filename"] == "sample.pdf"
+    listed = client.get(API, headers=auth_headers).json()["items"][0]
+    assert listed["document_filename"] == "sample.pdf"

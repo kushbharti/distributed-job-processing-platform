@@ -3,10 +3,10 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, Uuid, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column,relationship
 
 from app.db.base import Base
-
+from app.models.document import Document
 
 class JobStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -64,3 +64,8 @@ class Job(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    document: Mapped[Document] = relationship()
+
+    @property
+    def document_filename(self) -> str | None:
+        return self.document.filename if self.document is not None else None

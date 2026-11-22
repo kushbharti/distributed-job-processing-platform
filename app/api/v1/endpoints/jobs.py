@@ -7,7 +7,7 @@ from app.api.deps import CurrentUser
 from app.core.config import settings
 from app.db.dependencies import DbSession
 from app.models.job import Job, JobStatus
-from app.schemas.job import JobCreate, JobList, JobRead, JobResultRead
+from app.schemas.job import JobCreate, JobList, JobRead, JobResultRead, JobStats
 from app.services import job_service
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -36,20 +36,21 @@ def create_job(payload: JobCreate, user: CurrentUser, db: DbSession):
 def list_jobs(
     user: CurrentUser,
     db: DbSession,
-    status_filter: JobStatus | None = Query(None, alias="status"),
+    statuses: list[JobStatus] | None = Query(None, alias="status"),
     document_id: uuid.UUID | None = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
     items, total = job_service.list_jobs(
-        db,
-        user.id,
-        status=status_filter,
-        document_id=document_id,
-        limit=limit,
-        offset=offset,
+        db, user.id, statuses=statuses, document_id=document_id, limit=limit, offset=offset
     )
     return JobList(items=items, total=total, limit=limit, offset=offset)
+
+
+@router.get("/stats", response_model=JobStats)
+def job_stats(user: CurrentUser, db: DbSession):
+    counts = job_service.job_stats(db, user.id)
+    return JobStats(total=sum(counts.values()), by_status=counts)
 
 
 @router.get("/{job_id}", response_model=JobRead)

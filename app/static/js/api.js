@@ -87,3 +87,52 @@ export async function api(
 
   throw new ApiError(response.status, messageFrom(response.status, data), data);
 }
+
+// Uploads with progress. fetch() cannot report upload progress, so this uses XMLHttpRequest.
+export function upload(path, formData, { onProgress, signal } = {}) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+
+    const request = new XMLHttpRequest();
+    request.open("POST", `${BASE}${path}`);
+    const token = getToken();
+    if (token) request.setRequestHeader("Authorization", `Bearer ${token}`);
+
+    request.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
+    });
+    request.addEventListener("load", () => {
+      let data = null;
+      try {
+        data = JSON.parse(request.responseText);
+      } catch {
+        /* not JSON */
+      }
+      if (request.status >= 200 && request.status < 300) {
+        resolve(data);
+        return;
+      }
+      if (request.status === 401) expireSession();
+      reject(
+        new ApiError(request.status, messageFrom(request.status, data), data),
+      );
+    });
+    request.addEventListener("error", () =>
+      reject(
+        new ApiError(
+          0,
+          "Can't reach the server. Check your connection and try again.",
+        ),
+      ),
+    );
+    request.addEventListener("abort", () =>
+      reject(new DOMException("Aborted", "AbortError")),
+    );
+    signal?.addEventListener("abort", () => request.abort(), { once: true });
+
+    request.send(formData);
+  });
+}

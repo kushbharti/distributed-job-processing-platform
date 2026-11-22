@@ -19,6 +19,20 @@
   --danger-ink: #5e1912;
   --focus: #1e5fd1;
 
+  /* Job status colours: text on a light tint of the same hue */
+  --st-neutral-ink: #4f5a66;
+  --st-neutral-wash: #e0e4e8;
+  --st-queued-ink: #2f5384;
+  --st-queued-wash: #dce5f2;
+  --st-processing-ink: #0a5558;
+  --st-processing-wash: #d2e6e6;
+  --st-completed-ink: #25623a;
+  --st-completed-wash: #daebdf;
+  --st-retrying-ink: #7a5000;
+  --st-retrying-wash: #f2e5c8;
+  --st-failed-ink: #9c2b22;
+  --st-failed-wash: #f3dad7;
+
   /* Type: a book serif for headings and anything meant to be read, platform sans for the interface */
   --font-ui:
     "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,

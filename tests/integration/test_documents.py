@@ -89,4 +89,12 @@ def test_cleanup_failure_does_not_mask_the_validation_error(auth_headers, upload
 
     monkeypatch.setattr(Path, "unlink", locked)
     response = upload_pdf(auth_headers, content=b"%PDF-1.4 garbage", filename="bad.pdf")
-    assert response.status_code == 400  # the user still gets the real error
+    assert response.status_code == 400  
+    
+def test_document_list_includes_the_latest_job(client, auth_headers, document, queued_job):
+    item = client.get(API, headers=auth_headers).json()["items"][0]
+    assert item["latest_job"] == {"id": queued_job["id"], "status": "QUEUED"}
+
+
+def test_document_without_jobs_has_no_latest_job(client, auth_headers, document):
+    assert client.get(f"{API}/{document['id']}", headers=auth_headers).json()["latest_job"] is None

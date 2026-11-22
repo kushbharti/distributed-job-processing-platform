@@ -164,3 +164,17 @@ def delete_document(db: Session, document: Document) -> None:
         absolute = (settings.upload_path / relative).resolve()
         if absolute.is_relative_to(settings.upload_path):
             absolute.unlink(missing_ok=True)
+            
+def latest_jobs(
+    db: Session, document_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, tuple[uuid.UUID, str]]:
+    """The most recent job of each document, for a whole page of documents in one query."""
+    if not document_ids:
+        return {}
+    rows = db.execute(
+        select(Job.document_id, Job.id, Job.status)
+        .where(Job.document_id.in_(document_ids))
+        .distinct(Job.document_id)  # PostgreSQL DISTINCT ON: one row per document ...
+        .order_by(Job.document_id, Job.created_at.desc())  # ... the newest one
+    ).all()
+    return {document_id: (job_id, status) for document_id, job_id, status in rows}

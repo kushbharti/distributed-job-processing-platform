@@ -1,9 +1,10 @@
 import { APP_NAME } from "../config.js";
 import { h } from "./dom.js";
 
-// Add an entry here when a stage adds a page: F2 adds Documents' siblings, F3 adds Jobs.
-const NAV = [{ href: "#/documents", match: "/documents", label: "Documents" }];
-
+const NAV = [
+  { href: "#/documents", match: "/documents", label: "Documents" },
+  { href: "#/jobs", match: "/jobs", label: "Jobs" },
+];
 export function createShell({ email, onSignOut }) {
   const nav = h(
     "nav",

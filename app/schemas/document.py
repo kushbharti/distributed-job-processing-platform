@@ -3,6 +3,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.models.job import JobStatus
+
+
+class DocumentJobRef(BaseModel):
+    id: uuid.UUID
+    status: JobStatus
+
 
 class DocumentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -14,6 +21,7 @@ class DocumentRead(BaseModel):
     page_count: int | None
     status: str
     created_at: datetime
+    latest_job: DocumentJobRef | None = None
 
 
 class DocumentList(BaseModel):

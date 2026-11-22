@@ -142,3 +142,125 @@
     padding-top: var(--s6);
   }
 }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--s4);
+  font-size: var(--text-sm);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  margin: var(--s7) 0 var(--s3);
+}
+
+.section-head h2:focus {
+  outline: none;
+}
+
+.heading-count {
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+}
+
+/* Upload area */
+.dropzone {
+  display: grid;
+  justify-items: start;
+  gap: var(--s3);
+  padding: var(--s5);
+  border: 2px dashed var(--rule-strong);
+  border-radius: var(--r-panel);
+  background: var(--surface);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.dropzone.is-over {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.dropzone__title {
+  font-family: var(--font-reading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.dropzone__hint {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.uploads {
+  display: grid;
+  margin: var(--s4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upload {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12rem auto;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.upload__info {
+  display: grid;
+  min-width: 0;
+}
+
+.upload__name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload__status {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.upload.is-done .upload__status {
+  color: var(--accent-strong);
+}
+.upload.is-error .upload__status {
+  color: var(--danger);
+}
+
+/* Job details column */
+.details {
+  display: grid;
+  gap: var(--s1);
+  min-width: 10rem;
+}
+
+.details__text {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.details__text--clip {
+  display: block;
+  max-width: 24rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+  .upload {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .upload .bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

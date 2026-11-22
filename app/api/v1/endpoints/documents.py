@@ -1,13 +1,27 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile, status
+from sqlalchemy.orm import Session
 
 from app.api.deps import CurrentUser
 from app.db.dependencies import DbSession
-from app.schemas.document import DocumentList, DocumentRead
+from app.models.document import Document
+from app.schemas.document import DocumentJobRef, DocumentList, DocumentRead
 from app.services import document_service
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+def _present(db: Session, documents: list[Document]) -> list[DocumentRead]:
+    latest = document_service.latest_jobs(db, [d.id for d in documents])
+    result = []
+    for document in documents:
+        read = DocumentRead.model_validate(document)
+        reference = latest.get(document.id)
+        if reference is not None:
+            read.latest_job = DocumentJobRef(id=reference[0], status=reference[1])
+        result.append(read)
+    return result
 
 
 @router.post(
@@ -30,7 +44,7 @@ def list_documents(
     offset: int = Query(0, ge=0),
 ):
     items, total = document_service.list_documents(db, user.id, limit, offset)
-    return DocumentList(items=items, total=total, limit=limit, offset=offset)
+    return DocumentList(items=_present(db, items), total=total, limit=limit, offset=offset)
 
 
 @router.get("/{document_id}", response_model=DocumentRead)
@@ -38,7 +52,7 @@ def get_document(document_id: uuid.UUID, user: CurrentUser, db: DbSession):
     document = document_service.get_document(db, user.id, document_id)
     if document is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
-    return document
+    return _present(db, [document])[0]
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

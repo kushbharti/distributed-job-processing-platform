@@ -3,7 +3,7 @@ import uuid
 
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.job import ACTIVE_STATUSES, Job, JobStatus
 from app.models.job_result import JobResult
@@ -105,20 +105,35 @@ def list_jobs(
     db: Session,
     user_id: uuid.UUID,
     *,
-    status: JobStatus | None,
+    statuses: list[JobStatus] | None,
     document_id: uuid.UUID | None,
     limit: int,
     offset: int,
 ) -> tuple[list[Job], int]:
-    base = select(Job).where(Job.user_id == user_id)
-    if status is not None:
-        base = base.where(Job.status == status.value)
+    conditions = [Job.user_id == user_id]
+    if statuses:
+        conditions.append(Job.status.in_([s.value for s in statuses]))
     if document_id is not None:
-        base = base.where(Job.document_id == document_id)
-    total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    items = db.scalars(base.order_by(Job.created_at.desc()).limit(limit).offset(offset)).all()
+        conditions.append(Job.document_id == document_id)
+
+    total = db.scalar(select(func.count()).select_from(Job).where(*conditions)) or 0
+    items = db.scalars(
+        select(Job)
+        .options(joinedload(Job.document))  # file names in the same query, not one query per row
+        .where(*conditions)
+        .order_by(Job.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    ).all()
     return list(items), total
 
+def job_stats(db: Session, user_id: uuid.UUID) -> dict[str, int]:
+    rows = db.execute(
+        select(Job.status, func.count()).where(Job.user_id == user_id).group_by(Job.status)
+    ).all()
+    counts = {status.value: 0 for status in JobStatus}  # every status is present, even at zero
+    counts.update({status: count for status, count in rows})
+    return counts
 
 def cancel_job(db: Session, job: Job) -> Job:
     result = db.execute(

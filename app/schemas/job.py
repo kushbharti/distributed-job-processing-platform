@@ -15,6 +15,7 @@ class JobRead(BaseModel):
 
     id: uuid.UUID
     document_id: uuid.UUID
+    document_filename: str | None
     status: JobStatus
     progress: int
     current_stage: str | None
@@ -39,3 +40,7 @@ class JobResultRead(BaseModel):
     stats: dict
     metadata: dict
     created_at: datetime
+    
+class JobStats(BaseModel):
+    total: int
+    by_status: dict[str, int]

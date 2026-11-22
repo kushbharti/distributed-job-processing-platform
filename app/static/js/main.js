@@ -20,6 +20,9 @@ route("/register", () => import("./pages/register.js"), {
 });
 route("/documents", () => import("./pages/documents.js"));
 
+route("/jobs", () => import("./pages/jobs.js"));
+route("/jobs/:id", () => import("./pages/job.js"));
+
 function focusPage(container, page) {
   const target = page.focus ?? container.querySelector("h1");
   if (!target) return;
