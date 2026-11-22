@@ -35,3 +35,29 @@ export function formatDuration(startIso, endIso) {
   if (seconds < 60) return `${seconds} s`;
   return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
 }
+
+// PDF dates look like D:20261117173430+05'00'
+export function formatPdfDate(value) {
+  const match =
+    /^D:(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:([Zz+-])(\d{2})?'?(\d{2})?'?)?/.exec(
+      value,
+    );
+  if (!match) return value;
+  const [
+    ,
+    year,
+    month = "01",
+    day = "01",
+    hour = "00",
+    minute = "00",
+    second = "00",
+    sign,
+    offsetHour = "00",
+    offsetMinute = "00",
+  ] = match;
+  let iso = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+  if (sign === "Z" || sign === "z") iso += "Z";
+  else if (sign) iso += `${sign}${offsetHour}:${offsetMinute}`;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? value : dateFormat.format(date);
+}

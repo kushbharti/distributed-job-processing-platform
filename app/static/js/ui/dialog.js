@@ -2,7 +2,13 @@ import { h } from "./dom.js";
 
 // Asks for confirmation. Resolves to true only if the person chose the confirm button.
 // Cancel is focused first, so pressing Enter by reflex never destroys anything.
-export function confirmDialog({ title, message, confirmLabel = "Confirm", danger = false }) {
+export function confirmDialog({
+  title,
+  message,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  danger = false,
+}) {
   return new Promise((resolve) => {
     const dialog = h(
       "dialog",
@@ -15,10 +21,23 @@ export function confirmDialog({ title, message, confirmLabel = "Confirm", danger
         h(
           "div",
           { class: "dialog__actions" },
-          h("button", { type: "submit", value: "cancel", class: "btn btn--secondary", autofocus: true }, "Cancel"),
           h(
             "button",
-            { type: "submit", value: "confirm", class: `btn ${danger ? "btn--danger-solid" : "btn--primary"}` },
+            {
+              type: "submit",
+              value: "cancel",
+              class: "btn btn--secondary",
+              autofocus: true,
+            },
+            cancelLabel,
+          ),
+          h(
+            "button",
+            {
+              type: "submit",
+              value: "confirm",
+              class: `btn ${danger ? "btn--danger-solid" : "btn--primary"}`,
+            },
             confirmLabel,
           ),
         ),

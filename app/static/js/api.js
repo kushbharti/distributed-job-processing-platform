@@ -136,3 +136,38 @@ export function upload(path, formData, { onProgress, signal } = {}) {
     request.send(formData);
   });
 }
+
+export async function download(path, filename) {
+  const headers = new Headers();
+  const token = getToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  let response;
+  try {
+    response = await fetch(`${BASE}${path}`, { headers });
+  } catch {
+    throw new ApiError(
+      0,
+      "Can't reach the server. Check your connection and try again.",
+    );
+  }
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    if (response.status === 401) expireSession();
+    throw new ApiError(
+      response.status,
+      messageFrom(response.status, data),
+      data,
+    );
+  }
+
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}

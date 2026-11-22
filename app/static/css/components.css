@@ -274,6 +274,7 @@
 }
 
 .pipeline__step.is-done::before {
+  content: "✓";
   border-color: var(--accent);
   background: var(--accent);
   color: var(--on-accent);
@@ -299,6 +300,7 @@
 }
 
 .pipeline__step.is-failed::before {
+  content: "✕";
   border-color: var(--danger);
   background: var(--danger-wash);
   color: var(--danger);
