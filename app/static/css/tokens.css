@@ -1,0 +1,56 @@
+/* Design tokens: every colour, size and font used by the site is defined here. */
+:root {
+  color-scheme: light;
+
+  /* Colour */
+  --paper: #eceff1;
+  --surface: #f8f9fa;
+  --ink: #1c2530;
+  --ink-soft: #3e4955;
+  --ink-faint: #586471;
+  --rule: #cbd2d8;
+  --rule-strong: #78848f;
+  --accent: #0e6b6f;
+  --accent-strong: #0a4f52;
+  --accent-wash: #d6e6e6;
+  --on-accent: #f8f9fa;
+  --danger: #9c2b22;
+  --danger-wash: #f3dad7;
+  --danger-ink: #5e1912;
+  --focus: #1e5fd1;
+
+  /* Type: a book serif for headings and anything meant to be read, platform sans for the interface */
+  --font-ui:
+    "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-reading:
+    "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
+    serif;
+  --font-mono:
+    ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono",
+    monospace;
+
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.5rem;
+  --text-2xl: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+
+  --leading-tight: 1.2;
+  --leading-body: 1.55;
+
+  /* Space */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 4.5rem;
+
+  /* Shape */
+  --r-control: 4px;
+  --r-panel: 6px;
+  --page-width: 68rem;
+}

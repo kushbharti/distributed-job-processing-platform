@@ -1,0 +1,347 @@
+/* Brand */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Top bar */
+.topbar {
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.topbar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s5);
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: var(--s3) var(--s5);
+}
+
+.nav {
+  display: flex;
+  gap: var(--s1);
+  margin-right: auto;
+}
+
+.nav a {
+  padding: 0.45rem 0.75rem;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.nav a[aria-current="page"] {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+}
+
+.topbar__email {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 2.75rem;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-control);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn--primary:hover {
+  background: var(--accent-strong);
+  color: var(--on-accent);
+}
+
+.btn--secondary {
+  border-color: var(--rule-strong);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn--secondary:hover {
+  border-color: var(--ink);
+}
+
+.btn--quiet {
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.btn--quiet:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.btn--danger {
+  border-color: var(--danger);
+  background: transparent;
+  color: var(--danger);
+}
+
+.btn--danger:hover {
+  background: var(--danger-wash);
+}
+
+.btn--small {
+  min-height: 2.25rem;
+  padding: 0.5rem 0.8rem;
+  font-size: var(--text-sm);
+}
+
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Forms */
+.form {
+  display: grid;
+  gap: var(--s4);
+}
+
+.form .btn--primary {
+  width: 100%;
+}
+
+.field {
+  display: grid;
+  gap: var(--s1);
+}
+
+.field label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.field input {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.field input:hover {
+  border-color: var(--ink-soft);
+}
+
+.field input:focus-visible {
+  border-color: var(--focus);
+  outline-offset: 1px;
+}
+
+.field__msg {
+  min-height: 1.25em;
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+}
+
+.field--error input {
+  border-color: var(--danger);
+}
+.field--error .field__msg {
+  color: var(--danger);
+}
+
+/* Notices */
+.notice {
+  padding: var(--s3) var(--s4);
+  border-left: 3px solid var(--rule-strong);
+  background: var(--surface);
+  font-size: var(--text-sm);
+}
+
+.notice--error {
+  border-color: var(--danger);
+  background: var(--danger-wash);
+  color: var(--danger-ink);
+}
+
+.notice--info {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+}
+
+/* Panel */
+.panel {
+  padding: var(--s5);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-panel);
+  background: var(--surface);
+}
+
+/* The processing pipeline. Used on the sign-in page and, in Stage F4, for live job progress. */
+.pipeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.pipeline__step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 2.25rem;
+  color: var(--ink-faint);
+  counter-increment: step;
+}
+
+.pipeline__step::before {
+  content: counter(step);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* The line from this step's circle down to the next one */
+.pipeline__step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  width: 1.5px;
+  height: 100%;
+  margin-left: -0.75px;
+  background: var(--rule-strong);
+}
+
+.pipeline__step.is-done {
+  color: var(--ink);
+}
+
+.pipeline__step.is-done::before {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.pipeline__step.is-done:not(:last-child)::after {
+  background: var(--accent);
+}
+
+.pipeline__step.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pipeline__step.is-active::before {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+  color: var(--accent-strong);
+}
+
+.pipeline__step.is-failed {
+  color: var(--danger-ink);
+}
+
+.pipeline__step.is-failed::before {
+  border-color: var(--danger);
+  background: var(--danger-wash);
+  color: var(--danger);
+}
+
+/* Sign-in page: the track lights up once, step by step. The final state is the normal
+   style, so with reduced motion (animation: none) every step simply shows as done. */
+.pipeline--intro .pipeline__step {
+  color: var(--ink);
+  animation: step-text 0.4s ease-out both;
+  animation-delay: calc(var(--i) * 280ms + 300ms);
+}
+
+.pipeline--intro .pipeline__step::before {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  animation: step-dot 0.4s ease-out both;
+  animation-delay: calc(var(--i) * 280ms + 300ms);
+}
+
+.pipeline--intro .pipeline__step:not(:last-child)::after {
+  background: var(--accent);
+  animation: step-line 0.4s ease-out both;
+  animation-delay: calc(var(--i) * 280ms + 300ms);
+}
+
+@keyframes step-text {
+  from {
+    color: var(--ink-faint);
+  }
+}
+
+@keyframes step-dot {
+  from {
+    border-color: var(--rule-strong);
+    background: var(--paper);
+    color: var(--ink-faint);
+  }
+}
+
+@keyframes step-line {
+  from {
+    background: var(--rule-strong);
+  }
+}

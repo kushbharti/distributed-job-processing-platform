@@ -1,0 +1,144 @@
+/* App pages */
+.page {
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: var(--s7) var(--s5) var(--s8);
+}
+
+.page__head {
+  margin-bottom: var(--s6);
+}
+
+.page__sub {
+  max-width: 60ch;
+  margin-top: var(--s2);
+  color: var(--ink-soft);
+}
+
+.facts {
+  margin: 0;
+}
+
+.facts__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr;
+  gap: var(--s3);
+  padding-block: var(--s3);
+  border-top: 1px solid var(--rule);
+}
+
+.facts__row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.facts__row:last-child {
+  padding-bottom: 0;
+}
+
+.facts dt {
+  color: var(--ink-faint);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.facts__bad {
+  color: var(--danger);
+}
+
+/* Sign-in and registration */
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+  grid-template-areas: "intro panel";
+  min-height: 100vh;
+}
+
+.auth__panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s5);
+  padding: var(--s7) var(--s6);
+  border-left: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.auth__panel .brand {
+  margin-bottom: var(--s4);
+}
+
+.auth__title {
+  font-size: var(--text-xl);
+}
+
+.auth__footer {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.auth__intro {
+  grid-area: intro;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s4);
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
+  padding: var(--s7) var(--s6);
+}
+
+.auth__lede {
+  font-family: var(--font-reading);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.auth__copy {
+  max-width: 52ch;
+  color: var(--ink-soft);
+}
+
+.auth__intro .pipeline {
+  margin-block: var(--s2);
+}
+
+.auth__note {
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+}
+
+/* Narrow screens: the form comes first, the explanation below it */
+@media (max-width: 53.75rem) {
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "panel" "intro";
+    min-height: 0;
+  }
+
+  .auth__panel {
+    padding: var(--s6) var(--s5);
+    border-bottom: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  .auth__intro {
+    padding: var(--s6) var(--s5) var(--s7);
+  }
+}
+
+@media (max-width: 40rem) {
+  .topbar__email {
+    display: none;
+  }
+  .page {
+    padding-top: var(--s6);
+  }
+}
