@@ -386,3 +386,10 @@
     grid-row: 2;
   }
 }
+
+.lost {
+  display: grid;
+  gap: var(--s4);
+  justify-items: start;
+  margin-top: var(--s7);
+}

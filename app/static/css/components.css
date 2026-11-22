@@ -635,3 +635,67 @@
   line-height: 1;
   cursor: pointer;
 }
+
+/* Offline banner */
+.offline-banner {
+  margin: 0;
+  padding: var(--s2) var(--s4);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* High-contrast mode (Windows "Contrast themes"): the browser replaces our colours, so anything
+   that relied on a background colour alone needs a border, outline or system colour instead. */
+@media (forced-colors: active) {
+  .btn {
+    border-color: ButtonBorder;
+  }
+
+  .status {
+    border: 1px solid CanvasText;
+  }
+
+  .chip[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  .pipeline__step::before {
+    border-color: CanvasText;
+  }
+
+  .pipeline__step.is-done::before,
+  .pipeline__step.is-active::before {
+    border-color: Highlight;
+  }
+
+  .pipeline__step.is-active::before {
+    outline: 2px solid Highlight;
+  }
+
+  .pipeline__step.is-failed::before {
+    border-color: Mark;
+  }
+
+  .bar {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .bar::-webkit-progress-bar {
+    background: Canvas;
+  }
+  .bar::-webkit-progress-value {
+    background: Highlight;
+  }
+  .bar::-moz-progress-bar {
+    background: Highlight;
+  }
+
+  .dropzone.is-over {
+    border-color: Highlight;
+  }
+}

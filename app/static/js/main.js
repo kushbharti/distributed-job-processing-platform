@@ -1,10 +1,12 @@
-import { ApiError } from "./api.js";
+import { ApiError, userMessage } from "./api.js";
 import { currentUser, signOut } from "./auth.js";
 import { APP_NAME } from "./config.js";
 import { navigate, route, start } from "./router.js";
 import { isSignedIn, onSessionChange } from "./session.js";
+import { watchConnectivity } from "./ui/connectivity.js";
 import { h } from "./ui/dom.js";
 import { createShell } from "./ui/shell.js";
+import { toast } from "./ui/toast.js";
 
 const root = document.getElementById("app");
 let shell = null;
@@ -118,4 +120,12 @@ document.getElementById("skip-link").addEventListener("click", (event) => {
   document.getElementById("main")?.focus();
 });
 
+// A safety net: anything that slips past a page's own error handling is shown, not swallowed.
+window.addEventListener("unhandledrejection", (event) => {
+  if (event.reason?.name === "AbortError") return; // cancelled on purpose
+  console.error(event.reason);
+  toast(userMessage(event.reason), { kind: "error" });
+});
+
+watchConnectivity();
 start({ isSignedIn, render, notFound: notFoundPage, errorPage });
