@@ -130,7 +130,7 @@ Delivery is **at-least-once**, and execution is made **idempotent**, instead of 
 **Requirements:** Python 3.12, [uv](https://docs.astral.sh/uv/), Docker, and Git. Commands below are for PowerShell. On Linux or macOS the same commands work in a shell.
 
 ```powershell
-git clone https://github.com/kushbharti/distributed-job-platform.git
+git clone https://github.com/kushbharti/distributed-job-processing-platform.git
 cd distributed-job-platform
 
 # 1. Install dependencies
