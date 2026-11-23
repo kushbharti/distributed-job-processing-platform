@@ -1,7 +1,7 @@
 [project]
 name = "distributed-job-platform"
 version = "0.1.0"
-description = "Add your description here"
+description = "A distributed document processing platform with asynchronous job execution, fault tolerance, and real-time progress tracking."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
